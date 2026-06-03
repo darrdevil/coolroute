@@ -210,6 +210,55 @@ function findReasonableFeature(baseRoute, features, maxDistanceFromRouteKm, maxD
   return candidates.length > 0 ? candidates[0].feature : null;
 }
 
+function ScoreRing({ score }) {
+  const radius = 42;
+  const stroke = 8;
+  const normalizedRadius = radius - stroke / 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
+
+  return (
+    <div style={{ display: "flex", justifyContent: "center", margin: "10px 0" }}>
+      <svg height={radius * 2} width={radius * 2}>
+        <circle
+          stroke="rgba(255,255,255,0.18)"
+          fill="transparent"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        <circle
+          stroke="#00ffcc"
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+          transform={`rotate(-90 ${radius} ${radius})`}
+        />
+        <text
+          x="50%"
+          y="48%"
+          textAnchor="middle"
+          fill="#00ffcc"
+          fontSize="22"
+          fontWeight="bold"
+          dy=".3em"
+        >
+          {score}
+        </text>
+        <text x="50%" y="68%" textAnchor="middle" fill="white" fontSize="10">
+          /100
+        </text>
+      </svg>
+    </div>
+  );
+}
+
 export default function App() {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -1206,6 +1255,57 @@ export default function App() {
     return { beforeLine, shortcutLine, afterLine };
   }
 
+
+  function getDirectionTexts() {
+    if (selectedRoute === ROUTES.bicycle && bikeJourney) {
+      return [
+        `Walk from start to ${bikeJourney.pickupPoint.name}.`,
+        `Rent a bicycle and cycle to ${bikeJourney.returnPoint.name}.`,
+        "Return the bicycle and walk to destination."
+      ];
+    }
+
+    if (selectedRoute === ROUTES.fastest && showCommunityShortcutRoute) {
+      return [
+        "Walk from the start point toward the community shortcut entry.",
+        "Follow the user-defined community shortcut through the neighbourhood pedestrian path.",
+        "Continue along the remaining path toward the destination.",
+        "Arrive at destination."
+      ];
+    }
+
+    return selectedData?.steps?.slice(0, 8).map(
+      (step, index) => `Step ${index + 1}. ${step.instruction}. Continue for ${Math.round(step.distance)} metres.`
+    ) || [];
+  }
+
+  function speakDirections() {
+    if (!("speechSynthesis" in window)) {
+      alert("Voice output is not supported on this browser.");
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const directionText = getDirectionTexts().join(" ");
+
+    if (!directionText) {
+      alert("No directions available to read yet.");
+      return;
+    }
+
+    const speech = new SpeechSynthesisUtterance(directionText);
+    speech.rate = 0.9;
+    speech.pitch = 1;
+    speech.volume = 1;
+    window.speechSynthesis.speak(speech);
+  }
+
+  function stopSpeaking() {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
   return (
     <div style={{ backgroundImage: `url('${randomBg}')`, backgroundSize: "cover", backgroundPosition: "center", minHeight: "100vh", fontFamily: "Arial", color: "white" }}>
       <div style={overlayStyle}>
@@ -1301,40 +1401,6 @@ export default function App() {
               </ul>
             </div>
 
-            <div style={detectionBoxStyle}>
-              <div style={detectionColumnStyle}>
-                <h2 style={{ color: "#ffb703" }}>Shelter Detection</h2>
-                <p style={compactTextStyle}>Features detected: <b>{shelterFeatures.length}</b></p>
-                <p style={compactTextStyle}>Level: <b>{getShelterInfrastructureLevel()}</b></p>
-                {shelterFeatures.length > 0 ? (
-                  <ul style={compactListStyle}>
-                    {shelterFeatures.slice(0, 3).map((feature) => (
-                      <li key={feature.id}>{feature.name}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p style={compactTextStyle}>No explicit shelter tags found nearby.</p>
-                )}
-              </div>
-
-              <div style={verticalDividerStyle} />
-
-              <div style={detectionColumnStyle}>
-                <h2 style={{ color: "#00ff66" }}>Green Corridor Detection</h2>
-                <p style={compactTextStyle}>Features detected: <b>{greeneryFeatures.length}</b></p>
-                <p style={compactTextStyle}>Level: <b>{getGreenCorridorLevel()}</b></p>
-                {greeneryFeatures.length > 0 ? (
-                  <ul style={compactListStyle}>
-                    {greeneryFeatures.slice(0, 3).map((feature) => (
-                      <li key={feature.id}>{feature.name}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p style={compactTextStyle}>No nearby greenery features found.</p>
-                )}
-              </div>
-            </div>
-
             {(nearbyBikePickup || nearbyBikeReturn) && (
               <div style={bicycleBoxStyle}>
                 <h2 style={{ color: "#8a5cf6" }}>Bicycle Rental Locations</h2>
@@ -1415,7 +1481,7 @@ export default function App() {
                   >
                     <h2>{route.title}</h2>
                     <div style={badgeStyle}>{getRouteTag(route.title)}</div>
-                    <h1 style={scoreStyle}>{route.score}/100</h1>
+                    <ScoreRing score={route.score} />
                     <p style={{ fontSize: "0.95rem", opacity: 0.9 }}>{route.desc}</p>
                     <div style={metricRowStyle}>
                       <span>Shelter: {route.shelterCoverage}%</span>
@@ -1671,6 +1737,20 @@ export default function App() {
 
             <div style={directionsBoxStyle}>
               <h2>Directions</h2>
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "12px" }}>
+                <button
+                  onClick={speakDirections}
+                  style={{ ...buttonStyle, flex: "1 1 180px", backgroundColor: "#00c2a8" }}
+                >
+                  🔊 Read Directions
+                </button>
+                <button
+                  onClick={stopSpeaking}
+                  style={{ ...buttonStyle, flex: "1 1 180px", backgroundColor: "#666" }}
+                >
+                  Stop Voice
+                </button>
+              </div>
               {selectedRoute === ROUTES.bicycle && bikeJourney && (
                 <div style={bikeJourneyStyle}>
                   <h3 style={{ color: "#8a5cf6" }}>Walk + Bicycle Directions</h3>
