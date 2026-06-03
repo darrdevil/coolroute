@@ -1474,7 +1474,7 @@ export default function App() {
                     style={{
                       ...resultCardStyle,
                       border: isSelected ? "3px solid #00ffcc" : "1px solid rgba(255,255,255,0.18)",
-                      transform: isSelected ? "scale(1.03)" : "scale(1)",
+                      transform: "none",
                       boxShadow: isSelected ? "0 0 25px rgba(0,255,204,0.45)" : "none",
                       cursor: "pointer"
                     }}
@@ -1894,7 +1894,17 @@ const resultsGridStyle = {
   marginBottom: "20px",
   alignItems: "stretch"
 };
-const resultCardStyle = { backgroundColor: "rgba(0,0,0,0.45)", padding: "14px", borderRadius: "16px", backdropFilter: "blur(10px)", color: "white", transition: "0.2s ease", minWidth: "0", height: "100%" };
+const resultCardStyle = {
+  backgroundColor: "rgba(0,0,0,0.45)",
+  padding: "14px",
+  borderRadius: "16px",
+  backdropFilter: "blur(10px)",
+  color: "white",
+  transition: "0.2s ease",
+  minWidth: "0",
+  height: "auto",
+  marginBottom: "16px"
+};
 const scoreStyle = { color: "#00ffcc", fontSize: "2.3rem", margin: "6px 0", textShadow: "0 0 10px rgba(0,255,204,0.5)" };
 const badgeStyle = { display: "inline-block", backgroundColor: "rgba(0,255,204,0.16)", color: "#00ffcc", padding: "6px 10px", borderRadius: "999px", fontWeight: "bold", fontSize: "0.85rem", marginBottom: "8px", border: "1px solid rgba(0,255,204,0.35)" };
 const metricRowStyle = { display: "flex", justifyContent: "space-between", gap: "10px", flexWrap: "wrap", fontSize: "0.9rem", margin: "6px 0" };
