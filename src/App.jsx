@@ -1805,7 +1805,15 @@ const bicycleBoxStyle = panelStyle;
 const comparisonBoxStyle = { ...panelStyle, overflowX: "auto" };
 const comparisonTableStyle = { width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" };
 const tableCellStyle = { border: "1px solid rgba(255,255,255,0.25)", padding: "8px", textAlign: "center" };
-const resultsGridStyle = { width: "100%", maxWidth: "1400px", display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "14px", marginBottom: "20px", alignItems: "stretch" };
+const resultsGridStyle = {
+  width: "100%",
+  maxWidth: "1400px",
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: "14px",
+  marginBottom: "20px",
+  alignItems: "stretch"
+};
 const resultCardStyle = { backgroundColor: "rgba(0,0,0,0.45)", padding: "14px", borderRadius: "16px", backdropFilter: "blur(10px)", color: "white", transition: "0.2s ease", minWidth: "0", height: "100%" };
 const scoreStyle = { color: "#00ffcc", fontSize: "2.3rem", margin: "6px 0", textShadow: "0 0 10px rgba(0,255,204,0.5)" };
 const badgeStyle = { display: "inline-block", backgroundColor: "rgba(0,255,204,0.16)", color: "#00ffcc", padding: "6px 10px", borderRadius: "999px", fontWeight: "bold", fontSize: "0.85rem", marginBottom: "8px", border: "1px solid rgba(0,255,204,0.35)" };
